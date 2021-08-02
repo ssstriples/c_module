@@ -1,4 +1,4 @@
-/* Name : blockStageControl.c ver 1.0
+/* Name : blockStageControl.c ver 1.1
  * Content : 블록, 게임화면 컨트롤 함수들의 정의
  * Implementation : LSH
  *
@@ -13,6 +13,7 @@
 
 static int currentBlockModel;
 static int curPosX, curPosY;
+static int rotateSte;
 
 /* 함 수 : void InitNewBlockPos(int x, int y)
  * 기 능 : 블록의 첫 위치 지정
@@ -48,7 +49,7 @@ void ChooseBlock(void)
  */
 int GetCurrentBlockIdx(void)
 {
-    return currentBlockModel;
+    return currentBlockModel + rotateSte;
 }
 
 /* 함 수 : void ShowBlock(char blockInfo[][4])
@@ -104,6 +105,53 @@ void BlockDown(void)
 {
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     curPosY += 1;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void ShiftLeft(void)
+ * 기 능 : 블록을 왼쪽으로 한 칸 이동
+ * 반 환 : void
+ *
+ */
+void ShiftLeft(void)
+{
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    curPosX -= 2;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void ShiftRight(void)
+ * 기 능 : 블록을 오른쪽으로 한 칸 이동
+ * 반 환 : void
+ *
+ */
+void ShiftRight(void)
+{
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    curPosX += 2;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void RotateBlock(void)
+ * 기 능 : 블록을 90도 회전
+ * 반 환 : void
+ *
+ */
+void RotateBlock(void)
+{
+    int nextRotSte;
+
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    
+    nextRotSte = rotateSte + 1;
+    nextRotSte %= 4;
+    rotateSte = nextRotSte;
 
     SetCurrentCursorPos(curPosX, curPosY);
     ShowBlock(blockModel[GetCurrentBlockIdx()]);

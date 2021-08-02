@@ -1,4 +1,4 @@
-/* Name : tetrisMain.c ver 1.0
+/* Name : tetrisMain.c ver 1.1
  * Content : main 함수의 정의
  * Implementation : LSH
  *
@@ -10,10 +10,12 @@
 
 #define START_CURPOS_X  (5 * 2)
 #define START_CURPOS_Y  (0)
-#define SYS_DELAY       100
 
 int main(void)
 {
+    /* 게임 속도 설정 */
+    InitKeyDelayRate(10);
+
     /* 커서 깜빡임 제거 */
     RemoveCursor();
 
@@ -29,8 +31,8 @@ int main(void)
         /* 블록 한 칸 아래로 이동 */
         BlockDown();
 
-        /* 시스템 실행의 delay */
-        Sleep(SYS_DELAY);
+        /* 게이머 키 입력 처리 */
+        ProcessKeyInput();
     }
 
     return 0;

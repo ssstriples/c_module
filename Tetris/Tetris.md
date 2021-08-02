@@ -159,7 +159,124 @@ void RemoveCursor(void)
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &curInfo);
 }
 ```
-- 테트리스 블록 
+### 2. 블록의 좌우 이동과 회전
+- 콘솔 I/O
 ```
+#include <stdio.h>
+#include <conio.h>
 
+int main(void)
+{
+    int i, j;
+
+    while(1)
+    {
+        while( !_kbhit() )
+        {
+            puts("키 입력!!");
+            for (i=0; i<5000; i++)
+                for (j=0; j<5000; j++)
+                    ;
+        }
+        printf("입력된 키의 아스키 코드 : %d \n", _getch());
+    }
+
+    return 0;
+}
+```
+- 블록의 회전과 이동원리
+```
+/* 함 수 : void ShiftLeft(void)
+ * 기 능 : 블록을 왼쪽으로 한 칸 이동
+ * 반 환 : void
+ *
+ */
+void ShiftLeft(void)
+{
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    curPosX -= 2;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void ShiftRight(void)
+ * 기 능 : 블록을 오른쪽으로 한 칸 이동
+ * 반 환 : void
+ *
+ */
+void ShiftRight(void)
+{
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    curPosX += 2;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void RotateBlock(void)
+ * 기 능 : 블록을 90도 회전
+ * 반 환 : void
+ *
+ */
+void RotateBlock(void)
+{
+    int nextRotSte;
+
+    DeleteBlock(blockModel[GetCurrentBlockIdx()]);
+    
+    nextRotSte = rotateSte + 1;
+    nextRotSte %= 4;
+    rotateSte = nextRotSte;
+
+    SetCurrentCursorPos(curPosX, curPosY);
+    ShowBlock(blockModel[GetCurrentBlockIdx()]);
+}
+
+/* 함 수 : void ProcessKeyInput(void)
+ * 기 능 : 키 입력 처리
+ * 반 환 : void
+ *
+ */
+void ProcessKeyInput(void)
+{
+    int i;
+    int key;
+
+    for (i = 0; i < KEY_SENSITIVE; i++)
+    {
+        if (_kbhit() != 0)
+        {
+            key = _getch();
+            
+            switch (key)
+            {
+            case LEFT:
+                ShiftLeft();
+                break;
+            case RIGHT:
+                ShiftRight();
+                break;
+            case UP:
+                RotateBlock();
+            }
+        }
+        if (i % keyDelayRate == 0)
+        {
+            Sleep(SYS_DELAY);
+        }
+    }
+}
+
+/* 함 수 : void InitKeyDelayRate(int rate)
+ * 기 능 : 속도 조절, 값이 클수록 속도 증가
+ * 반 환 : void
+ *
+ */
+void InitKeyDelayRate(int rate)
+{
+    if (rate < 1)
+        return;
+    keyDelayRate = rate;
+}
 ```
