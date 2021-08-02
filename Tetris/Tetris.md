@@ -159,6 +159,7 @@ void RemoveCursor(void)
     SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &curInfo);
 }
 ```
+---
 ### 2. 블록의 좌우 이동과 회전
 - 콘솔 I/O
 ```
@@ -279,4 +280,10 @@ void InitKeyDelayRate(int rate)
         return;
     keyDelayRate = rate;
 }
+```
+---
+### 3. 충돌 검사와 블록 쌓기
+- 
+```
+
 ```
