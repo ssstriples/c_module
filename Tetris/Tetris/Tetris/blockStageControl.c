@@ -1,8 +1,8 @@
-/* Name : blockStageControl.c ver 1.1
+/* Name : blockStageControl.c ver 1.2
  * Content : 블록, 게임화면 컨트롤 함수들의 정의
  * Implementation : LSH
  *
- * Last modified 2021.08.02
+ * Last modified 2021.08.04
  */
 
 #include <time.h>
@@ -10,6 +10,14 @@
 #include "point.h"
 #include "blockInfo.h"
 #include "keyCurControl.h"
+
+#define GBOARD_WIDTH    10
+#define GBOARD_HEIGHT   20
+
+#define GBOARD_ORIGIN_X 4
+#define GBOARD_ORIGIN_Y 2
+
+static int gameBoardInfo[GBOARD_HEIGHT + 1][GBOARD_WIDTH + 2] = { 0, };
 
 static int currentBlockModel;
 static int curPosX, curPosY;
@@ -96,18 +104,23 @@ void DeleteBlock(char blockInfo[][4])
     SetCurrentCursorPos(curPos.x, curPos.y);
 }
 
-/* 함 수 : void BlockDown(void)
+/* 함 수 : int BlockDown(void)
  * 기 능 : 모니터에 그려진 블록을 아래로 한 칸 내림
- * 반 환 : void
+ * 반 환 : 성공 시 1, 실패 시 0
  *
  */
-void BlockDown(void)
+int BlockDown(void)
 {
+    if (!DetectCollision(curPosX, curPosY + 1, blockModel[GetCurrentBlockIdx()]))
+        return 0;
+
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     curPosY += 1;
 
     SetCurrentCursorPos(curPosX, curPosY);
     ShowBlock(blockModel[GetCurrentBlockIdx()]);
+
+    return 1;
 }
 
 /* 함 수 : void ShiftLeft(void)
@@ -117,6 +130,9 @@ void BlockDown(void)
  */
 void ShiftLeft(void)
 {
+    if (!DetectCollision(curPosX - 2, curPosY, blockModel[GetCurrentBlockIdx()]))
+        return;
+
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     curPosX -= 2;
 
@@ -131,6 +147,9 @@ void ShiftLeft(void)
  */
 void ShiftRight(void)
 {
+    if (!DetectCollision(curPosX + 2, curPosY, blockModel[GetCurrentBlockIdx()]))
+        return;
+
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     curPosX += 2;
 
@@ -146,6 +165,7 @@ void ShiftRight(void)
 void RotateBlock(void)
 {
     int nextRotSte;
+    int beforeRotSte = rotateSte;   // 복원을 위한 정보
 
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     
@@ -153,6 +173,129 @@ void RotateBlock(void)
     nextRotSte %= 4;
     rotateSte = nextRotSte;
 
+    if (!DetectCollision(curPosX, curPosY, blockModel[GetCurrentBlockIdx()]))
+    {
+        rotateSte = beforeRotSte;
+        return;
+    }
+
     SetCurrentCursorPos(curPosX, curPosY);
     ShowBlock(blockModel[GetCurrentBlockIdx()]);
 }
+
+/* 함 수 : int DetectCollision(int posX, int posY, char blockModel[][4])
+ * 기 능 : 블록의 이동 및 회전 가능 여부 판단
+ * 반 환 : 이동 및 회전 가능 시 1 반환
+ *
+ */
+int DetectCollision(int posX, int posY, char blockModel[][4])
+{
+    int x, y;
+
+    /* gameBoardInfo 배열의 좌표로 변경 */
+    int arrX = (posX - GBOARD_ORIGIN_X) / 2;
+    int arrY = posY - GBOARD_ORIGIN_Y;
+    
+    /* 충돌 검사 */
+    for (x = 0; x < 4; x++)
+    {
+        for (y = 0; y < 4; y++)
+        {
+            /* Short Circuit Evaluation에 의해 배열 일부만 검사 */
+            if (blockModel[y][x] == 1 && gameBoardInfo[arrY + y][arrX + x] == 1)
+                return 0;
+        }
+    }
+    return 1;
+}
+
+/* 함 수 : void DrawGameBoard(void)
+ * 기 능 : 게임 판의 경계 면을 그린다.
+ * 반 환 : void
+ *
+ */
+void DrawGameBoard(void)
+{
+    int x, y;
+
+    /* 시각적인 부분 처리 */
+    for (y = 0; y <= GBOARD_HEIGHT; y++)
+    {
+        SetCurrentCursorPos(GBOARD_ORIGIN_X, GBOARD_ORIGIN_Y + y);
+
+        if (y == GBOARD_HEIGHT)
+            printf("└─");
+        else
+            printf("│");
+    }
+
+    for (y = 0; y <= GBOARD_HEIGHT; y++)
+    {
+        SetCurrentCursorPos(GBOARD_ORIGIN_X + (GBOARD_WIDTH + 1) * 2, GBOARD_ORIGIN_Y + y);
+
+        if (y == GBOARD_HEIGHT)
+            printf("┘");
+        else
+            printf("│");
+    }
+
+    for (x = 1; x < GBOARD_WIDTH + 1; x++)
+    {
+        SetCurrentCursorPos(GBOARD_ORIGIN_X + x * 2, GBOARD_ORIGIN_Y + GBOARD_HEIGHT);
+
+        printf("──");
+    }
+    SetCurrentCursorPos(0, 0);
+
+    /* 데이터 부분 처리 */
+    for (y = 0; y < GBOARD_HEIGHT; y++)
+    {
+        gameBoardInfo[y][0] = 1;
+        gameBoardInfo[y][GBOARD_WIDTH+1] = 1;
+    }
+
+    for (x = 0; x < GBOARD_WIDTH + 2; x++)
+    {
+        gameBoardInfo[GBOARD_HEIGHT][x] = 1;
+    }
+}
+
+/* 함 수 : void AddCurrentBlockInfoToBoard(void)
+ * 기 능 : 배열에 현재 블록의 정보를 추가한다.
+ * 반 환 : void
+ *
+ */
+void AddCurrentBlockInfoToBoard(void)
+{
+    int x, y;
+
+    int arrCurX;
+    int arrCurY;
+
+    for (y = 0; y < 4; y++)
+    {
+        for (x = 0; x < 4; x++)
+        {
+            /* 커서 위치 정보를 배열 index 정보로 변경 */
+            arrCurX = (curPosX - GBOARD_ORIGIN_X) / 2;
+            arrCurY = curPosY - GBOARD_ORIGIN_Y;
+
+            if (blockModel[GetCurrentBlockIdx()][y][x] == 1)
+                gameBoardInfo[arrCurY + y][arrCurX + x] = 1;
+        }
+    }
+}
+
+/* 함 수 : int IsGameOver(void)
+ * 기 능 : 게임이 종료되었는지 확인하는 함수
+ * 반 환 : 게임 종료 시 1 반환
+ *
+ */
+int IsGameOver(void)
+{
+    if (!DetectCollision(curPosX, curPosY, blockModel[GetCurrentBlockIdx()]))
+        return 1;
+    else
+        return 0;
+}
+
