@@ -1,13 +1,14 @@
-/* Name : tetrisMain.c ver 1.2
+/* Name : tetrisMain.c ver 1.3
  * Content : main 함수의 정의
  * Implementation : LSH
  *
- * Last modified 2021.08.04
+ * Last modified 2021.08.22
  */
 #include <windows.h>
 #include "common.h"
 #include "keyCurControl.h"
 #include "blockStageControl.h"
+#include "scoreLevelControl.h"
 
 #define START_CURPOS_X  (5 * 2)
 #define START_CURPOS_Y  (0)
@@ -15,13 +16,16 @@
 int main(void)
 {
     /* 게임 속도 설정 */
-    InitKeyDelayRate(10);
+    InitKeyDelayRate(5);
 
     /* 커서 깜빡임 제거 */
     RemoveCursor();
 
     /* 게임 보드 그리기 */
     DrawGameBoard();
+
+    /* 현재 점수, 레벨 표시 */
+    ShowCurrentScoreAndLevel();
 
     /* 반복적으로 새로운 블록의 등장 */
     while (1)
@@ -42,12 +46,13 @@ int main(void)
             /* 블록 한 칸 아래로 이동 */
             if (BlockDown() == 0)   // 블록 이동 실패 시
             {
-                AddCurrentBlockInfoToBoard();
+                //AddCurrentBlockInfoToBoard();
                 break;
             }
 
             /* 게이머 키 입력 처리 */
-            ProcessKeyInput();
+            if (ProcessKeyInput())
+                break;  // 스페이스 바 입력 시
         }
     }
 

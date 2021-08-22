@@ -1,8 +1,8 @@
-/* Name : blockStageControl.c ver 1.2
+/* Name : blockStageControl.c ver 1.3
  * Content : 블록, 게임화면 컨트롤 함수들의 정의
  * Implementation : LSH
  *
- * Last modified 2021.08.04
+ * Last modified 2021.08.22
  */
 
 #include <time.h>
@@ -10,6 +10,8 @@
 #include "point.h"
 #include "blockInfo.h"
 #include "keyCurControl.h"
+#include "blockStageControl.h"
+#include "scoreLevelControl.h"
 
 #define GBOARD_WIDTH    10
 #define GBOARD_HEIGHT   20
@@ -112,7 +114,12 @@ void DeleteBlock(char blockInfo[][4])
 int BlockDown(void)
 {
     if (!DetectCollision(curPosX, curPosY + 1, blockModel[GetCurrentBlockIdx()]))
+    {
+        /* 행 단위로 채워진 블록 정보 검사 */
+        AddCurrentBlockInfoToBoard();
+        RemoveFillUpline();
         return 0;
+    }
 
     DeleteBlock(blockModel[GetCurrentBlockIdx()]);
     curPosY += 1;
@@ -207,6 +214,75 @@ int DetectCollision(int posX, int posY, char blockModel[][4])
         }
     }
     return 1;
+}
+
+/* 함 수 : void DrawSolidBlocks(void)
+ * 기 능 : 게임 판에 굳어진 블록을 그린다.
+ * 반 환 : void
+ *
+ */
+void DrawSolidBlocks(void)
+{
+    int x, y;
+    int cursX, cursY;
+
+    for (y = 0; y < GBOARD_HEIGHT; y++)
+    {
+        for (x = 1; x < GBOARD_WIDTH + 1; x++)
+        {
+            cursX = x * 2 + GBOARD_ORIGIN_X;
+            cursY = y + GBOARD_ORIGIN_Y;
+            SetCurrentCursorPos(cursX, cursY);
+            
+            if (gameBoardInfo[y][x] == 1)
+                printf("■");
+            else
+                printf("  ");
+        }
+    }
+}
+
+/* 함 수 : void RemoveFillUpline(void)
+ * 기 능 : 행 단위로 채워진 블록을 삭제한다.
+ * 반 환 : void
+ *
+ */
+void RemoveFillUpline(void)
+{
+    int x, y;
+    int line;
+
+    for (y = GBOARD_HEIGHT - 1; y > 0; y--)
+    {
+        for (x = 1; x < GBOARD_WIDTH + 1; x++)
+        {
+            if (gameBoardInfo[y][x] != 1)
+                break;
+        }
+
+        if (x == (GBOARD_WIDTH + 1))    // 라인이 다 채워지면
+        {
+            for (line = 0; y - line > 0; line++)
+            {
+                memcpy(&gameBoardInfo[y-line][1], &gameBoardInfo[(y-line) - 1][1], GBOARD_WIDTH * sizeof(int));
+            }
+
+            y++;    // 배열 정보가 아래로 한 칸씩 이동했으므로
+            AddGameScore(10);
+            ShowCurrentScoreAndLevel();
+        }
+    }
+    DrawSolidBlocks();
+}
+
+/* 함 수 : void SolidCurrentBlock(void)
+ * 기 능 : 현재의 블록을 바닥으로 이동시켜 굳힌다.
+ * 반 환 : void
+ *
+ */
+void SolidCurrentBlock(void)
+{
+    while (BlockDown());
 }
 
 /* 함 수 : void DrawGameBoard(void)

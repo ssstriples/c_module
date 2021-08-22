@@ -345,3 +345,6 @@ void DrawGameBoard(void)
     SetCurrentCursorPos(0, 0);
 }
 ```
+---
+### 4. 블록의 소멸과 레벨 그리고 스페이스바 입력 처리
+- 끝!

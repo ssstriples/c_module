@@ -1,8 +1,8 @@
-/* Name : keyCurControl.c ver 1.1
+/* Name : keyCurControl.c ver 1.2
  * Content : 커서, 키보드 컨트롤 함수들의 정의
  * Implementation : LSH
  *
- * Last modified 2021.08.02
+ * Last modified 2021.08.22
  */
 
 #include <conio.h>
@@ -17,6 +17,7 @@
 #define RIGHT   77
 #define UP      72
 #define DOWN    80
+#define SPACE   32
 
 static int keyDelayRate;    // 값이 클수록 속도 증가
 
@@ -61,12 +62,12 @@ void SetCurrentCursorPos(int x, int y)
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-/* 함 수 : void ProcessKeyInput(void)
+/* 함 수 : int ProcessKeyInput(void)
  * 기 능 : 키 입력 처리
- * 반 환 : void
+ * 반 환 : SPACE 선택 시 1
  *
  */
-void ProcessKeyInput(void)
+int ProcessKeyInput(void)
 {
     int i;
     int key;
@@ -87,6 +88,13 @@ void ProcessKeyInput(void)
                 break;
             case UP:
                 RotateBlock();
+                break;
+            case DOWN:
+                BlockDown();
+                break;
+            case SPACE:
+                SolidCurrentBlock();
+                return 1;   // 스페이스 바가 입력되었음을 알리기 위해
             }
         }
         if (i % keyDelayRate == 0)
@@ -94,6 +102,7 @@ void ProcessKeyInput(void)
             Sleep(SYS_DELAY);
         }
     }
+    return 0;   // 스페이스 바 이외의 키가 입력되었을 때 반환
 }
 
 /* 함 수 : void InitKeyDelayRate(int rate)
@@ -108,4 +117,13 @@ void InitKeyDelayRate(int rate)
     keyDelayRate = rate;
 }
 
+/* 함 수 : void keyDelaySpeedCtl(int addSpeed)
+ * 기 능 : 속도를 변화시킨다 +는 증가, -는 감소
+ * 반 환 : void
+ *
+ */
+void KeyDelaySpeedCtl(int addSpeed)
+{
+    keyDelayRate += addSpeed;
+}
 /* end of file */
